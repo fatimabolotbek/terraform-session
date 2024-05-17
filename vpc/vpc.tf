@@ -8,145 +8,145 @@ resource "aws_vpc" "main" {
 }
 
 
- resource "aws_subnet" "Public1" {
+ resource "aws_subnet" "public_1" {
   vpc_id     = aws_vpc.main.id
   cidr_block = "10.0.1.0/24"
 
   tags = {
-    Name = "Public1"
+    Name = "public-1"
   }
 }
 
 
- resource "aws_subnet" "Public2" {
+ resource "aws_subnet" "public_2" {
   vpc_id     = aws_vpc.main.id
   cidr_block = "10.0.2.0/24"
 
   tags = {
-    Name = "Public2"
+    Name = "public-2"
   }
 }
 
- resource "aws_subnet" "Public3" {
+ resource "aws_subnet" "public_3" {
   vpc_id     = aws_vpc.main.id
   cidr_block = "10.0.3.0/24"
 
   tags = {
-    Name = "Public3"
+    Name = "public-3"
   }
 }
 
 
- resource "aws_subnet" "Private1" {
+ resource "aws_subnet" "private_1" {
   vpc_id     = aws_vpc.main.id
   cidr_block = "10.0.11.0/24"
 
   tags = {
-    Name = "Private1"
+    Name = "private-1"
   }
 }
 
 
- resource "aws_subnet" "Private2" {
+ resource "aws_subnet" "private_2" {
   vpc_id     = aws_vpc.main.id
   cidr_block = "10.0.12.0/24"
 
   tags = {
-    Name = "Private2"
+    Name = "private-2"
   }
 }
 
 
- resource "aws_subnet" "Private3" {
+ resource "aws_subnet" "private_3" {
   vpc_id     = aws_vpc.main.id
   cidr_block = "10.0.13.0/24"
 
   tags = {
-    Name = "Private3"
+    Name = "private-3"
   }
 }
 
 
-resource "aws_route_table" "private-vpc-route_table" {
+resource "aws_route_table" "private_route_table" {
   vpc_id = aws_vpc.main.id
 
     tags = {
-    Name = "private-vpc-route-table"
+    Name = "private-route-table"
   }
 }
 
-resource "aws_route_table" "public-vpc-route_table" {
+resource "aws_route_table" "public_route_table" {
   vpc_id = aws_vpc.main.id
 
     tags = {
-    Name = "public-vpc-route-table"
+    Name = "public-route-table"
   }
 }
 
-resource "aws_internet_gateway" "gw" {
+resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "vpc-int-gateway"
+    Name = "vpc-igw"
   }
 }
 
-resource "aws_eip" "lb" {
+resource "aws_eip" "ngw_eip" {
   
 }
-resource "aws_nat_gateway" "Public" {
-  allocation_id = aws_eip.lb.id
-  subnet_id     = aws_subnet.Public3.id
+resource "aws_nat_gateway" "ngw" {
+  allocation_id = aws_eip.ngw_eip.id
+  subnet_id     = aws_subnet.public_1.id
 
   tags = {
-    Name = "vpc-gw-nat"
+    Name = "vpc-ngw"
   }
 
   # To ensure proper ordering, it is recommended to add an explicit dependency
   # on the Internet Gateway for the VPC.
-  depends_on = [aws_internet_gateway.gw]
+  depends_on = [aws_internet_gateway.igw]
 }
 
-resource "aws_route_table_association" "Public1" {
-  subnet_id      = aws_subnet.Public1.id
-  route_table_id = aws_route_table.public-vpc-route_table.id
+resource "aws_route_table_association" "public_1" {
+  subnet_id      = aws_subnet.public_1.id
+  route_table_id = aws_route_table.public_route_table.id
 }
 
-resource "aws_route_table_association" "Public2" {
-  subnet_id      = aws_subnet.Public2.id
-  route_table_id = aws_route_table.public-vpc-route_table.id
+resource "aws_route_table_association" "public_2" {
+  subnet_id      = aws_subnet.public_2.id
+  route_table_id = aws_route_table.public_route_table.id
 }
 
-resource "aws_route_table_association" "Public3" {
-  subnet_id      = aws_subnet.Public3.id
-  route_table_id = aws_route_table.public-vpc-route_table.id
+resource "aws_route_table_association" "public_3" {
+  subnet_id      = aws_subnet.public_3.id
+  route_table_id = aws_route_table.public_route_table.id
 }
 
-resource "aws_route_table_association" "Private1" {
-  subnet_id      = aws_subnet.Private1.id
-  route_table_id = aws_route_table.private-vpc-route_table.id
-}
-
-
-resource "aws_route_table_association" "Private2" {
-  subnet_id      = aws_subnet.Private2.id
-  route_table_id = aws_route_table.private-vpc-route_table.id
-}
-
-resource "aws_route_table_association" "Private3" {
-  subnet_id      = aws_subnet.Private3.id
-  route_table_id = aws_route_table.private-vpc-route_table.id
+resource "aws_route_table_association" "private_1" {
+  subnet_id      = aws_subnet.private_1.id
+  route_table_id = aws_route_table.private_route_table.id
 }
 
 
-resource "aws_route" "ingv-rtbl" {
-  route_table_id            = aws_route_table.public-vpc-route_table.id
+resource "aws_route_table_association" "private_2" {
+  subnet_id      = aws_subnet.private_2.id
+  route_table_id = aws_route_table.private_route_table.id
+}
+
+resource "aws_route_table_association" "private_3" {
+  subnet_id      = aws_subnet.private_3.id
+  route_table_id = aws_route_table.private_route_table.id
+}
+
+
+resource "aws_route" "igw_route" {
+  route_table_id            = aws_route_table.public_route_table.id
   destination_cidr_block    = "0.0.0.0/0"
-  gateway_id = aws_internet_gateway.gw.id
+  gateway_id = aws_internet_gateway.igw.id
 }
 
-resource "aws_route" "nat-gateway" {
-  route_table_id            = aws_route_table.private-vpc-route_table.id
+resource "aws_route" "ngw_route" {
+  route_table_id            = aws_route_table.private_route_table.id
   destination_cidr_block    = "0.0.0.0/0"
-  gateway_id = aws_nat_gateway.Public.id
+  gateway_id = aws_nat_gateway.ngw.id
 }
